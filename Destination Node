@@ -1,0 +1,84 @@
+#include<arpa/inet.h>
+#include<netinet/in.h>
+#include<stdio.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdbool.h>
+
+#define PORT 50000   
+#define BUFFER_SIZE 1024 
+
+void main()
+{
+int n;
+int count = 0;
+int s,s1;
+int i;
+FILE *output;
+struct sockaddr_in remote,remote1;
+int len_remote = sizeof(remote);
+char check[100];
+        unsigned char msg[BUFFER_SIZE];
+        bool flag = true;
+        char buffer[1024];
+        output = fopen("Output.c", "w");
+
+        char msg1[15];
+
+
+
+ if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1){
+        fprintf(stderr, "Error getting a socket! \n");
+        exit(-1);
+    }
+  memset((char *) &remote, 0, sizeof(remote));
+
+    remote.sin_family = AF_INET;
+    remote.sin_port = htons(PORT);
+
+        if(bind(s, &remote, sizeof(remote)) == -1){
+    fprintf(stderr, "Cannot connect to service!\n");
+    exit(-1);}
+
+
+  //  if(inet_aton(SERVER_IP, &remote.sin_addr) == 0){
+//        fprintf(stderr, "maybe no valid adress\n");
+  //      exit(1);
+   // }
+int flag1 = 1,i1=-1;
+
+while(flag1 == 1){
+        ++i1;
+    memset(buffer, '\0', BUFFER_SIZE);
+       
+        //printf("%s",msg1);
+    if(recvfrom(s, buffer, BUFFER_SIZE, 0, &remote, &len_remote) == -1){
+        fprintf(stderr, "fail while receiving data! \n");
+exit(-1);
+    }
+    int l = 0;
+    n = 0;
+    for(l = 0; l<sizeof(buffer) ;l++){
+
+        if(buffer[l] != NULL)
+        {
+            n++;
+        }
+          }
+    count += n;
+fwrite(buffer, 1, n, output);
+
+    if(n<1024){
+        flag1 = 0;
+    }
+
+
+}
+printf("Got the file!\n");
+//printf("%s",msg1);
+close(s);
+fclose(output);
+}
