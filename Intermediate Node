@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BUFFER_LENGTH    1024
+#define FALSE              0
+
+struct queue
+{
+char pkt[1100];
+}q[100];
+
+void addq(char a[1024],int pt);
+int qlength();
+char * getq(int i);
+void replace();
+void senddest(char msg1[1024]);
+
+int qlen = 0;
+
+void main()
+{
+int n;
+int count = 0;
+int s,rc;
+int i;
+FILE *output;
+struct sockaddr_in remote,remote1;
+int len_remote = sizeof(remote);
+char check[100];
+        unsigned char msg[BUFFER_LENGTH];
+        bool flag = true;
+	char buffer[1024];
+	char msg1[1024];
+
+ if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1){
+        fprintf(stderr, "Error getting a socket! \n");
+        exit(-1);
+    }
+  memset((char *) &remote, 0, sizeof(remote));
+
+    remote.sin_family = AF_INET;
+    remote.sin_port = htons(50000);
+
+	if(bind(s, &remote, sizeof(remote)) == -1){
+    fprintf(stderr, "Cannot connect to service!\n");
+    exit(-1);}
+int i1=0;
+while(true) 
+{  
+
+memset(buffer, '\0', BUFFER_LENGTH);
+        if(recvfrom(s,msg1,1024,0,&remote, &len_remote)==-1)
+exit(-1);
+printf("\n\n%s\n\n",msg1);
+if(strcmp(msg1,"BUFREQ")==0)
+{
+//printf("%s",msg1);
+//int len;
+char c[10];
+//len = qlength();
+sprintf(c, "%d",i1);
+strcpy(buffer,c);
+      rc = sendto(s, buffer, 1024, 0,
+                  (struct sockaddr *)&remote,
+                  sizeof(remote));
+
+}	
+else
+{
+//addq(msg1,i1);
+i1++;
+//printf("%s",msg1);
+senddest(msg1);
+}
+}
+}
+void senddest(char msg1[1024])
+{
+int sd = -1, rc;
+      struct hostent *hostp;
+   struct sockaddr_in serveraddr;
+   int    serveraddrlen = sizeof(serveraddr);
+   bool flag = "true";
+  int i=0;
+char buffer[1024];
+
+      sd = socket(AF_INET, SOCK_DGRAM, 0);
+            memset(&serveraddr, 0, sizeof(serveraddr));
+         serveraddr.sin_family      = AF_INET;
+         serveraddr.sin_port        = htons(50000);
+         serveraddr.sin_addr.s_addr = inet_addr("198.37.19.201");
+
+        do
+        {
+      memset(buffer, 0, sizeof(buffer));
+      strcpy(buffer, msg1);
+
+      rc = sendto(sd, buffer, sizeof(buffer), 0,
+                  (struct sockaddr *)&serveraddr,
+                  sizeof(serveraddr));
+	
+	}while(false);
+   	if(sd != -1)
+      	close(sd);
+}
+void addq(char * a ,int pt)
+{
+strncpy(q[pt].pkt,a,1024);
+//printf("%s",q[pt].pkt);
+}
+
+int qlength()
+{
+int i=0;
+if(strcmp(q[i].pkt,"")!=0)
+{
+i++;
+qlen++;
+}
+return qlen;
+}
+char * getq(int i)
+{
+char a1[1100];
+strncpy(a1,q[i].pkt,1024);
+return a1;
+}
+void replace()
+{
+int i1 = 0;
+for(i1 = 0; i1 < sizeof(q[i1].pkt)-1;i1++)
+{
+printf("%d",strlen(q[i1].pkt));
+if (strcmp(q[i1].pkt,"")!=0)
+{
+strncpy(q[i1].pkt,q[i1+1].pkt,1024);
+printf("%s",q[i1].pkt);
+}
+else break;
+}
+}
