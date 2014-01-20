@@ -1,0 +1,148 @@
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdbool.h>
+#include <ifaddrs.h>
+#include <stdlib.h>
+
+
+#define BUFFER_LENGTH    1024
+#define FALSE              0
+#define SERVER_NAME     "ServerHostName"
+
+struct routing
+{
+char ip[15];
+int x;
+int y;
+};
+
+struct qlen
+{
+int qlen;
+char ip1[15];
+}q[10];
+
+int x2[4];
+int y2[4];
+int k=0;
+
+
+int runsocket(char ip[15]);
+void sendfile();
+void choose();
+
+void main()
+{
+sendfile();
+}
+
+int runsocket(char ip[15])
+{
+ int sd = -1, rc;
+   char   server[BUFFER_LENGTH];
+   char   buffer[BUFFER_LENGTH]="0";
+   struct hostent *hostp;
+   struct sockaddr_in serveraddr;
+   int    serveraddrlen = sizeof(serveraddr);
+   bool flag = "true";
+  int i=0;
+
+
+      sd = socket(AF_INET, SOCK_DGRAM, 0);
+            memset(&serveraddr, 0, sizeof(serveraddr));
+         serveraddr.sin_family      = AF_INET;
+         serveraddr.sin_port        = htons(50000);
+         serveraddr.sin_addr.s_addr = inet_addr(ip);
+         if (serveraddr.sin_addr.s_addr == (unsigned long)INADDR_NONE)
+      {
+
+         hostp = gethostbyname(server);
+         memcpy(&serveraddr.sin_addr,
+                hostp->h_addr,
+                sizeof(serveraddr.sin_addr));
+      }
+
+	do
+	{
+      memset(buffer, 0, sizeof(buffer));
+      strcpy(buffer, "BUFREQ");
+
+      rc = sendto(sd, buffer, sizeof(buffer), 0,
+                  (struct sockaddr *)&serveraddr,
+                  sizeof(serveraddr));
+        
+     rc = recvfrom(sd, buffer, sizeof(buffer), 0,
+                    (struct sockaddr *)&serveraddr,
+                    & serveraddrlen);
+      	
+      printf("client received the following: <%s>\n", buffer);
+      printf("from port %d, from address %s\n",
+           ntohs(serveraddr.sin_port),
+         inet_ntoa(serveraddr.sin_addr));
+	//q[k].qlen=atoi(buffer);
+	//strcpy(q[k].ip1,(char)inet_ntoa(serveraddr.sin_addr));
+	//k++;
+	int size;
+	size = atoi(buffer);
+	return size;	
+}while(false);
+   if(sd != -1)
+      close(sd);
+
+}
+void sendfile(char ip[15])
+{
+FILE *input;
+FILE *checkfile;
+int n;
+int count = 0;
+struct sockaddr_in local, remote,remote1;
+int len_remote = sizeof(remote);
+int s,s1,k1,k2;
+char buffer[1024];
+input = fopen("psniff.c", "r");
+checkfile = fopen("checkfile.txt", "w");
+
+if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1){
+    fprintf(stderr, "Error getting a socket!\n");
+    exit(-1);
+}
+memset((char *) &remote, 0, sizeof(remote));
+remote.sin_family = AF_INET;
+remote.sin_port = htons(50000);
+//remote.sin_addr.s_addr = inet_addr(ip);
+if (input){
+while(!feof(input)){
+        n = fread(buffer, 1, 1024, input);
+        count += n;
+        printf("n = %d\n", n);
+
+       	k1 = runsocket("198.37.19.205");
+	k2 = runsocket("198.37.19.201");
+	if (k1 < k2)
+	remote.sin_addr.s_addr = inet_addr("198.37.19.205");
+       	else
+	remote.sin_addr.s_addr = inet_addr("198.37.19.201");
+
+	if(sendto(s, buffer,n, 0, &remote, sizeof(remote)) == -1){
+            fprintf(stderr, "error while sending data!\n");
+            exit(-1);
+        }
+
+	
+        fwrite(buffer, 1, n, checkfile);
+	
+
+}
+    printf("%d bytes sent. \n", count);
+
+printf("File sent!!\n");
+}
+close(s);
+fclose(input);
+}
